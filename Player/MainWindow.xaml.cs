@@ -1,8 +1,10 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Player.Utils;
 using Player.ViewModels;
 
 namespace Player
@@ -12,20 +14,17 @@ namespace Player
     /// </summary>
     public partial class MainWindow : Window
     {
+        private HotkeyHook _hotkeyHook;
         private MainWindowViewModel _viewModel;
-        private bool _isLoaded = false;
 
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        public override async void EndInit()
+        protected override async void OnSourceInitialized(EventArgs e)
         {
-            base.EndInit();
-            if (_isLoaded) return;
-            _isLoaded = true;
-
+            base.OnSourceInitialized(e);
             NotPlayingList.Items.SortDescriptions.Add(new SortDescription(string.Empty, ListSortDirection.Ascending));
             PlayingList.Items.SortDescriptions.Add(new SortDescription(string.Empty, ListSortDirection.Ascending));
             NotPlayingList.ItemsSource = await Task.Run(() =>
@@ -34,6 +33,13 @@ namespace Player
                 return _viewModel.NotPlayingList;
             });
             PlayingList.ItemsSource = _viewModel.PlayingList;
+            _hotkeyHook = new HotkeyHook(this, _viewModel);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            _hotkeyHook.Dispose();
         }
 
         private void NotPlayingList_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)

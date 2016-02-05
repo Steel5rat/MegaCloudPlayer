@@ -4,17 +4,21 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NAudio.Wave;
 using Player.Models;
+using Player.Utils;
 
 namespace Player.ViewModels
 {
     public class MainWindowViewModel
     {
         private readonly Node _model;
+        private readonly AudioPlayer _player;
 
         public MainWindowViewModel()
         {
+            _player = new AudioPlayer();
             _model = new Node();
             NotPlayingList = new ObservableCollection<ListItem>(
                 _model.GetRootDirs().Select(s => new ListItem
@@ -31,17 +35,9 @@ namespace Player.ViewModels
 
         private void PlayingList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            IWavePlayer waveOutDevice = new WaveOut();
-            //AudioFileReader audioFileReader = new AudioFileReader("free.mp3");
-
-            var megaStream = _model.GetMp3();
-            var bytes = new BinaryReader(megaStream).ReadBytes((int)megaStream.Length);
-            var ms = new MemoryStream(bytes);
-
-            var mp3sr = new Mp3FileReader(ms);
-            waveOutDevice.Init(mp3sr);
-            waveOutDevice.Play();
-
+            var streams = _model.GetAllMp3(PlayingList.Select(s => s.Id).ToList());
+            _player.Init(streams);
+            _player.Play();
         }
 
         public void MoveToPlayList(string id)
@@ -53,6 +49,22 @@ namespace Player.ViewModels
         {
             SwapItem(PlayingList, NotPlayingList, id);
         }
+
+        public void PauseHotkeyPressed()
+        {
+            _player.Pause();//TODO: more intellect
+        }
+
+        public void NextHotkeyPressed()
+        {
+            _player.Forward();
+        }
+
+        public void PreviousHotkeyPressed()
+        {
+            _player.Back();
+        }
+        public void ShowHotkeyPressed() { }
 
         private void SwapItem(ICollection<ListItem> source, ICollection<ListItem> destination, string id)
         {

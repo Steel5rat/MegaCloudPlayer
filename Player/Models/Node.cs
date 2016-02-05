@@ -29,5 +29,24 @@ namespace Player.Models
             var node = _nodes.First(w => w.Type == NodeType.File && w.Name.Split('.').Last().ToUpper() == "MP3");
             return _client.Download(node);
         }
+
+        public IList<Stream> GetAllMp3(IList<string> dirIds)
+        {
+            return GetFilesFromDirs(dirIds, "MP3");
+        }
+
+        private IList<Stream> GetFilesFromDirs(IEnumerable<string> dirIds, string extension)
+        {
+            List<Stream> result = null;
+            foreach (var dirId in dirIds)
+            {
+                result = _nodes.Where(
+                    w => w.ParentId == dirId && w.Type == NodeType.File && w.Name.Split('.').Last().ToUpper() == extension)
+                    .Select(s => _client.Download(s))
+                    .ToList();
+                result.AddRange(GetFilesFromDirs(_nodes.Where(w => w.ParentId == dirId && w.Type == NodeType.Directory).Select(s => s.Id), extension));
+            }
+            return result;
+        }
     }
 }
