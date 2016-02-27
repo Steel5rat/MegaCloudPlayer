@@ -35,8 +35,8 @@ namespace Player.ViewModels
 
         private void PlayingList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            var streams = _model.GetAllMp3(PlayingList.Select(s => s.Id).ToList());
-            _player.Init(streams);
+            var files = _model.GetAllMp3(PlayingList.Select(s => s.Id).ToList());
+            _player.Init(files);
             _player.Play();
         }
 

@@ -30,21 +30,25 @@ namespace Player.Models
             return _client.Download(node);
         }
 
-        public IList<Stream> GetAllMp3(IList<string> dirIds)
+        public Stream GetNodeStream(INode node)
         {
-            return GetFilesFromDirs(dirIds, "MP3");
+            return _client.Download(node);
         }
 
-        private IList<Stream> GetFilesFromDirs(IEnumerable<string> dirIds, string extension)
+        public IList<INode> GetAllMp3(IList<string> dirIds)
         {
-            List<Stream> result = null;
+            return GetNodesFromDirs(dirIds, "MP3");
+        }
+
+        private IList<INode> GetNodesFromDirs(IEnumerable<string> dirIds, string extension)
+        {
+            List<INode> result = null;
             foreach (var dirId in dirIds)
             {
                 result = _nodes.Where(
                     w => w.ParentId == dirId && w.Type == NodeType.File && w.Name.Split('.').Last().ToUpper() == extension)
-                    .Select(s => _client.Download(s))
                     .ToList();
-                result.AddRange(GetFilesFromDirs(_nodes.Where(w => w.ParentId == dirId && w.Type == NodeType.Directory).Select(s => s.Id), extension));
+                result.AddRange(GetNodesFromDirs(_nodes.Where(w => w.ParentId == dirId && w.Type == NodeType.Directory).Select(s => s.Id), extension));
             }
             return result;
         }
